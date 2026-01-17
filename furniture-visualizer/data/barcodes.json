@@ -1,0 +1,14 @@
+{
+  "STYLE-001": {
+    "id": "STYLE-001",
+    "type": "style",
+    "name": "Modern Sectional Sofa",
+    "imageUrl": "/images/styles/modern-sectional.jpg"
+  },
+  "MAT-001": {
+    "id": "MAT-001",
+    "type": "material",
+    "name": "Grey Linen Fabric",
+    "imageUrl": "/images/materials/grey-linen.jpg"
+  }
+}
