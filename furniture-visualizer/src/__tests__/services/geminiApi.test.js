@@ -106,6 +106,21 @@ describe('geminiApi', () => {
         expect(result.note).toContain('Imagen API');
       });
     });
+
+    describe('error handling', () => {
+      test('throws error when API call fails', async () => {
+        const { GoogleGenerativeAI } = require('@google/generative-ai');
+        GoogleGenerativeAI.mockImplementationOnce(() => ({
+          getGenerativeModel: jest.fn().mockReturnValue({
+            generateContent: jest.fn().mockRejectedValue(new Error('API Error')),
+          }),
+        }));
+
+        await expect(
+          generateMaterialSwap('valid-key', 'style.jpg', 'material.jpg')
+        ).rejects.toThrow('Failed to generate material swap: API Error');
+      });
+    });
   });
 
   describe('mockGenerateMaterialSwap', () => {

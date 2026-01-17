@@ -1,11 +1,13 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { StyleSheet, Text, View, Image, ScrollView, TouchableOpacity, Alert, Modal } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import BarcodeScanner from './src/components/BarcodeScanner';
 import BarcodeAdmin from './src/components/BarcodeAdmin';
+import AdminLogin from './src/components/AdminLogin';
 import { useFurnitureState } from './src/hooks/useFurnitureState';
 import { getBarcodeData } from './src/services/barcodeDatabase';
 import { generateWithClaudeOrMock } from './src/services/claudeApi';
+import { isSessionValid, logout, extendSession } from './src/services/auth';
 
 // Set your Anthropic API key here or via environment variable
 const ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY || null;
@@ -22,6 +24,49 @@ export default function App() {
 
   const [loading, setLoading] = useState(false);
   const [showAdmin, setShowAdmin] = useState(false);
+  const [showAdminLogin, setShowAdminLogin] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+
+  // Check session validity on mount and periodically
+  useEffect(() => {
+    checkSession();
+    const interval = setInterval(checkSession, 60000); // Check every minute
+    return () => clearInterval(interval);
+  }, []);
+
+  const checkSession = async () => {
+    const valid = await isSessionValid();
+    setIsAuthenticated(valid);
+    if (valid) {
+      await extendSession();
+    }
+  };
+
+  const handleAdminAccess = async () => {
+    const valid = await isSessionValid();
+    if (valid) {
+      setIsAuthenticated(true);
+      setShowAdmin(true);
+    } else {
+      setShowAdminLogin(true);
+    }
+  };
+
+  const handleAuthenticated = () => {
+    setIsAuthenticated(true);
+    setShowAdminLogin(false);
+    setShowAdmin(true);
+  };
+
+  const handleAdminClose = () => {
+    setShowAdmin(false);
+  };
+
+  const handleLogout = async () => {
+    await logout();
+    setIsAuthenticated(false);
+    setShowAdmin(false);
+  };
 
   const handleStyleScan = async (barcode) => {
     console.log('Style scanned:', barcode);
@@ -181,20 +226,42 @@ export default function App() {
         {/* Admin Button */}
         <TouchableOpacity
           style={styles.adminButton}
-          onPress={() => setShowAdmin(true)}
+          onPress={handleAdminAccess}
         >
-          <Text style={styles.adminButtonText}>Add New Barcode</Text>
+          <Text style={styles.adminButtonText}>
+            {isAuthenticated ? 'Admin Panel' : 'Admin Login'}
+          </Text>
         </TouchableOpacity>
       </ScrollView>
 
-      {/* Admin Modal */}
+      {/* Admin Login Modal */}
+      <Modal
+        visible={showAdminLogin}
+        animationType="fade"
+        transparent={true}
+      >
+        <AdminLogin
+          onAuthenticated={handleAuthenticated}
+          onCancel={() => setShowAdminLogin(false)}
+        />
+      </Modal>
+
+      {/* Admin Panel Modal */}
       <Modal
         visible={showAdmin}
         animationType="slide"
         presentationStyle="pageSheet"
       >
+        <View style={styles.adminHeader}>
+          <TouchableOpacity
+            style={styles.logoutButton}
+            onPress={handleLogout}
+          >
+            <Text style={styles.logoutButtonText}>Logout</Text>
+          </TouchableOpacity>
+        </View>
         <BarcodeAdmin
-          onClose={() => setShowAdmin(false)}
+          onClose={handleAdminClose}
           onAssign={(data) => {
             Alert.alert('Barcode Added', `${data.id} assigned to "${data.name}"`);
           }}
@@ -440,6 +507,27 @@ const styles = StyleSheet.create({
   adminButtonText: {
     color: '#666',
     fontSize: 16,
+    fontWeight: '600',
+  },
+  adminHeader: {
+    backgroundColor: '#f5f5f5',
+    paddingTop: 50,
+    paddingHorizontal: 20,
+    paddingBottom: 10,
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+    borderBottomWidth: 1,
+    borderBottomColor: '#e0e0e0',
+  },
+  logoutButton: {
+    backgroundColor: '#dc3545',
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 8,
+  },
+  logoutButtonText: {
+    color: 'white',
+    fontSize: 14,
     fontWeight: '600',
   },
 });
