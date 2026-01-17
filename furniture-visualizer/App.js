@@ -5,7 +5,10 @@ import BarcodeScanner from './src/components/BarcodeScanner';
 import BarcodeAdmin from './src/components/BarcodeAdmin';
 import { useFurnitureState } from './src/hooks/useFurnitureState';
 import { getBarcodeData } from './src/services/barcodeDatabase';
-import { mockGenerateMaterialSwap } from './src/services/geminiApi';
+import { generateWithClaudeOrMock } from './src/services/claudeApi';
+
+// Set your Anthropic API key here or via environment variable
+const ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY || null;
 
 export default function App() {
   const {
@@ -43,9 +46,10 @@ export default function App() {
         // Generate new visualization
         setLoading(true);
         try {
-          const result = await mockGenerateMaterialSwap(
+          const result = await generateWithClaudeOrMock(
             selectedStyle.name,
-            data.name
+            data.name,
+            ANTHROPIC_API_KEY
           );
 
           // Store the result
