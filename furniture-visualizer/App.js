@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
-import { StyleSheet, Text, View, Image, ScrollView, TouchableOpacity, Alert } from 'react-native';
+import { StyleSheet, Text, View, Image, ScrollView, TouchableOpacity, Alert, Modal } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import BarcodeScanner from './src/components/BarcodeScanner';
+import BarcodeAdmin from './src/components/BarcodeAdmin';
 import { useFurnitureState } from './src/hooks/useFurnitureState';
 import { getBarcodeData } from './src/services/barcodeDatabase';
 import { mockGenerateMaterialSwap } from './src/services/geminiApi';
@@ -172,7 +173,29 @@ export default function App() {
             </View>
           </View>
         </View>
+
+        {/* Admin Button */}
+        <TouchableOpacity
+          style={styles.adminButton}
+          onPress={() => setShowAdmin(true)}
+        >
+          <Text style={styles.adminButtonText}>Add New Barcode</Text>
+        </TouchableOpacity>
       </ScrollView>
+
+      {/* Admin Modal */}
+      <Modal
+        visible={showAdmin}
+        animationType="slide"
+        presentationStyle="pageSheet"
+      >
+        <BarcodeAdmin
+          onClose={() => setShowAdmin(false)}
+          onAssign={(data) => {
+            Alert.alert('Barcode Added', `${data.id} assigned to "${data.name}"`);
+          }}
+        />
+      </Modal>
     </View>
   );
 }
@@ -399,5 +422,20 @@ const styles = StyleSheet.create({
   testBarcodeName: {
     fontSize: 12,
     color: '#666',
+  },
+  adminButton: {
+    backgroundColor: '#f0f0f0',
+    marginHorizontal: 20,
+    marginTop: 20,
+    padding: 16,
+    borderRadius: 12,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#ddd',
+  },
+  adminButtonText: {
+    color: '#666',
+    fontSize: 16,
+    fontWeight: '600',
   },
 });

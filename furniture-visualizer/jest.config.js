@@ -1,5 +1,5 @@
 module.exports = {
-  testEnvironment: 'node',
+  testEnvironment: 'jsdom',
   setupFilesAfterEnv: ['<rootDir>/jest.setup.js'],
   collectCoverageFrom: [
     'src/**/*.{js,jsx}',
@@ -10,7 +10,10 @@ module.exports = {
     '**/?(*.)+(spec|test).[jt]s?(x)'
   ],
   transform: {
-    '^.+\\.(js|jsx)$': ['babel-jest', { configFile: './babel.config.js' }],
+    '^.+\\.(js|jsx)$': 'babel-jest',
+  },
+  moduleNameMapper: {
+    '^react-native$': '<rootDir>/node_modules/react-native-web',
   },
   transformIgnorePatterns: [
     'node_modules/(?!(react-native|@react-native|expo|@expo)/)',
